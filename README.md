@@ -1,6 +1,6 @@
 🔒 AccessVault – Biometric Password Manager 
 
-    A secure Android password manager that stores credentials using AES encryption , authenticates via fingerprint or face unlock , and supports autofill across apps . 
+A secure Android password manager that stores credentials using AES encryption , authenticates via fingerprint or face unlock , and supports autofill across apps . 
      
 
 📝 Project Description 
@@ -68,32 +68,7 @@ Auto-fills credentials in external apps
  
 💻 Sample Code Highlights 
 🔒 AES Encryption Using Android Keystore (DBHelper.java) 
-java
- 
- 
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-⌄
+
 private SecretKey getOrCreateSecretKey() throws Exception {
     KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
     keyStore.load(null);
@@ -119,16 +94,7 @@ private SecretKey getOrCreateSecretKey() throws Exception {
  
  
 🧠 Biometric Authentication (LoginActivity.java) 
-java
- 
- 
-1
-2
-3
-4
-5
-6
-7
+
 promptInfo = new BiometricPrompt.PromptInfo.Builder()
         .setTitle("Unlock AccessVault")
         .setSubtitle("Use fingerprint or face unlock")
@@ -139,46 +105,8 @@ checkBiometricSupportAndAuthenticate();
  
  
 🧩 Autofill Integration (MyAutofillService.java) 
-java
- 
- 
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-⌄
-⌄
-⌄
-⌄
-⌄
+
+
 @Override
 public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSignal cancellationSignal, @NonNull FillCallback callback) {
     List<AssistStructure> structures = request.getStructures();
@@ -213,16 +141,6 @@ public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSig
 }
  
  
-🖥️ How to Run 
-
-    Clone the repo: 
-    bash
-     
-
- 
-1
-git clone https://github.com/YOUR_USERNAME/accessvault.git 
- 
  
 
 Open in Android Studio  
@@ -235,28 +153,12 @@ Build and run on:
 
 Enable the app in: 
  
-
-     
-    1
     Settings > Security & Location > Autofill service
      
      
      
 
-📷 Screenshots 
 
-You can add your own screenshots under the images/ folder and reference them like this: 
-markdown
- 
- 
-1
-2
-3
-⌄
-![Login Screen](images/login.png)
-![Vault List](images/vault_list.png)
-![Autofill Prompt](images/autofill_prompt.png)
- 
  
 📄 License 
 
