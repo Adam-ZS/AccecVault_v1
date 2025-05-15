@@ -1,9 +1,9 @@
-🔒 AccessVault – Biometric Password Manager 
+# 🔒 AccessVault – Biometric Password Manager 
 
 A secure Android password manager that stores credentials using AES encryption , authenticates via fingerprint or face unlock , and supports autofill across apps . 
      
 
-📝 Project Description 
+## 📝 Project Description 
 
 AccessVault is a local, encrypted credential storage app designed to help users securely manage login details without relying on cloud services. It uses the Android Keystore System  to protect the AES key, stores credentials in an SQLite database , and integrates with the Android Autofill Framework  to automatically fill login fields in other apps. 
 
@@ -15,7 +15,7 @@ This app follows modern Android development practices:
     Encrypted credentials at rest
      
 
-🔑 Features 
+### 🔑 Features 
 🔐 AES Encryption
 	
 All credentials are encrypted using AES/CBC before saving
@@ -33,7 +33,7 @@ Fills username/password fields in external apps
 Automatically adapts to system theme
  
  
-🛡️ Security Model 
+### 🛡️ Security Model 
 
     Credentials are stored as: iv_base64:encrypted_data_base64
     AES key is generated and protected by the Android Keystore 
@@ -42,7 +42,7 @@ Automatically adapts to system theme
     Data is never sent to a server — it stays 100% local 
      
 
-📦 Technologies Used 
+### 📦 Technologies Used 
 Android Keystore
 	
 Secure AES key generation
@@ -66,7 +66,7 @@ AutofillService
 Auto-fills credentials in external apps
  
  
-💻 Sample Code Highlights 
+### 💻 Sample Code Highlights 
 🔒 AES Encryption Using Android Keystore (DBHelper.java) 
 
 private SecretKey getOrCreateSecretKey() throws Exception {
@@ -93,7 +93,7 @@ private SecretKey getOrCreateSecretKey() throws Exception {
 }
  
  
-🧠 Biometric Authentication (LoginActivity.java) 
+### 🧠 Biometric Authentication (LoginActivity.java) 
 
 promptInfo = new BiometricPrompt.PromptInfo.Builder()
         .setTitle("Unlock AccessVault")
@@ -104,7 +104,7 @@ promptInfo = new BiometricPrompt.PromptInfo.Builder()
 checkBiometricSupportAndAuthenticate();
  
  
-🧩 Autofill Integration (MyAutofillService.java) 
+### 🧩 Autofill Integration (MyAutofillService.java) 
 
 
 @Override
@@ -143,7 +143,7 @@ public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSig
  
  
 
-Open in Android Studio  
+## Open in Android Studio  
 
 Build and run on: 
 
@@ -160,7 +160,7 @@ Enable the app in:
 
 
  
-📄 License 
+### 📄 License 
 
 MIT License – see LICENSE  
 🚀 Future Enhancements 
