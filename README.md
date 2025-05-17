@@ -69,7 +69,7 @@ Auto-fills credentials in external apps
 ### 💻 Sample Code Highlights 
 🔒 AES Encryption Using Android Keystore (DBHelper.java) 
 
-private SecretKey getOrCreateSecretKey() throws Exception {
+    private SecretKey getOrCreateSecretKey() throws Exception {
     KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
     keyStore.load(null);
 
@@ -94,21 +94,20 @@ private SecretKey getOrCreateSecretKey() throws Exception {
  
  
 ### 🧠 Biometric Authentication (LoginActivity.java) 
-
-promptInfo = new BiometricPrompt.PromptInfo.Builder()
+	promptInfo = new BiometricPrompt.PromptInfo.Builder()
         .setTitle("Unlock AccessVault")
         .setSubtitle("Use fingerprint or face unlock")
         .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
         .build();
 
-checkBiometricSupportAndAuthenticate();
+	checkBiometricSupportAndAuthenticate();
  
  
 ### 🧩 Autofill Integration (MyAutofillService.java) 
 
 
-@Override
-public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSignal cancellationSignal, @NonNull FillCallback callback) {
+    @Override
+    public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSignal cancellationSignal, @NonNull FillCallback callback) {
     List<AssistStructure> structures = request.getStructures();
     if (structures == null || structures.isEmpty()) {
         callback.onSuccess(null);
@@ -138,7 +137,7 @@ public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSig
     } else {
         callback.onSuccess(null);
     }
-}
+    }
  
  
  
