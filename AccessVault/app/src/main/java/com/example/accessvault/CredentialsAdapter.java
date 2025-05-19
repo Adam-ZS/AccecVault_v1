@@ -20,21 +20,15 @@ public class CredentialsAdapter extends ArrayAdapter<Credential> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        View listItemView = convertView;
-        if (listItemView == null) {
-            listItemView = LayoutInflater.from(getContext()).inflate(
-                    R.layout.list_item_credential, parent, false);
+        Credential credential = getItem(position);
+        if (convertView == null) {
+            convertView = LayoutInflater.from(getContext()).inflate(
+                    android.R.layout.simple_list_item_1, parent, false);
         }
 
-        Credential currentCredential = getItem(position);
-        TextView tvSiteName = listItemView.findViewById(R.id.tvSiteNameItem);
-        TextView tvUsername = listItemView.findViewById(R.id.tvUsernameItem);
+        TextView text1 = convertView.findViewById(android.R.id.text1);
+        text1.setText(credential != null ? credential.getSiteName() : "Unknown Site");
 
-        if (currentCredential != null) {
-            tvSiteName.setText(currentCredential.getSiteName());
-            tvUsername.setText(currentCredential.getUsername());
-        }
-
-        return listItemView;
+        return convertView;
     }
 }

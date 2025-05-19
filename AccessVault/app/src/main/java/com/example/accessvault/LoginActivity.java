@@ -22,22 +22,19 @@ public class LoginActivity extends AppCompatActivity {
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
-    private Button btnLoginWithBiometrics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        btnLoginWithBiometrics = findViewById(R.id.btnLoginWithBiometrics);
-
         executor = ContextCompat.getMainExecutor(this);
         biometricPrompt = new BiometricPrompt(this, executor, new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                 super.onAuthenticationError(errorCode, errString);
-                Log.e(TAG, "Authentication error: " + errorCode + " :: " + errString);
-                Toast.makeText(getApplicationContext(), "Authentication cancelled", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Authentication error: " + errString, Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Auth Error: " + errorCode + " - " + errString);
                 finish();
             }
 
@@ -52,18 +49,17 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                Toast.makeText(getApplicationContext(), "Authentication failed. Try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Authentication failed", Toast.LENGTH_SHORT).show();
             }
         });
 
         promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle("Unlock AccessVault")
-                .setSubtitle("Use fingerprint or face to authenticate")
+                .setSubtitle("Use fingerprint or face unlock")
                 .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
                 .build();
 
         checkBiometricSupportAndAuthenticate();
-        btnLoginWithBiometrics.setOnClickListener(v -> checkBiometricSupportAndAuthenticate());
     }
 
     private void checkBiometricSupportAndAuthenticate() {
@@ -73,7 +69,7 @@ public class LoginActivity extends AppCompatActivity {
                 biometricPrompt.authenticate(promptInfo);
                 break;
             case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                Toast.makeText(this, "No biometric features available on this device.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "No biometric features available.", Toast.LENGTH_LONG).show();
                 finish();
                 break;
             case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
@@ -81,8 +77,8 @@ public class LoginActivity extends AppCompatActivity {
                 finish();
                 break;
             case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                Toast.makeText(this, "No biometrics enrolled. Please set up fingerprint or face unlock in your device settings.", Toast.LENGTH_LONG).show();
-                final Intent enrollIntent = new Intent(Settings.ACTION_BIOMETRIC_ENROLL);
+                Toast.makeText(this, "No biometrics enrolled. Please set up fingerprint or face.", Toast.LENGTH_LONG).show();
+                Intent enrollIntent = new Intent(Settings.ACTION_BIOMETRIC_ENROLL);
                 enrollIntent.putExtra(Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
                         BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
                 startActivityForResult(enrollIntent, REQUEST_CODE_BIOMETRIC_ENROLL);

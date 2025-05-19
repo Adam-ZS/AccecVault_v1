@@ -2,7 +2,6 @@ package com.example.accessvault;
 
 import android.app.assist.AssistStructure;
 import android.os.Build;
-import android.text.InputType;
 import android.util.Log;
 import android.view.autofill.AutofillId;
 import android.view.autofill.AutofillValue;
@@ -15,7 +14,6 @@ import java.util.Locale;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class AutofillHelper {
-
     private static final String TAG = "AutofillHelper";
 
     public static class ParsedStructure {
@@ -40,8 +38,7 @@ public class AutofillHelper {
         int nodes = structure.getWindowNodeCount();
         for (int i = 0; i < nodes; i++) {
             AssistStructure.WindowNode windowNode = structure.getWindowNodeAt(i);
-            AssistStructure.ViewNode viewNode = windowNode.getRootViewNode(); // ✅ Correct method
-            traverseStructureForFill(viewNode, parsed, packageName);
+            traverseStructureForFill(windowNode.getRootViewNode(), parsed, packageName);
         }
         return parsed;
     }
@@ -50,46 +47,44 @@ public class AutofillHelper {
         if (node == null) return;
 
         AutofillId autofillId = node.getAutofillId();
+        if (autofillId == null) return;
 
-        if (autofillId != null) {
-            parsed.allFields.add(autofillId);
+        parsed.allFields.add(autofillId);
 
-            String[] hints = node.getAutofillHints(); // ✅ From ViewNode
-            if (hints != null) {
-                for (String hint : hints) {
-                    String lowerHint = hint.toLowerCase(Locale.ROOT);
-                    if (parsed.usernameId == null && (lowerHint.contains("username") || lowerHint.contains("email"))) {
-                        parsed.usernameId = autofillId;
-                        Log.d(TAG, "Found username field by hint: " + hint + " ID: " + autofillId);
-                    } else if (parsed.passwordId == null && lowerHint.contains("password")) {
-                        parsed.passwordId = autofillId;
-                        Log.d(TAG, "Found password field by hint: " + hint + " ID: " + autofillId);
-                    }
-                }
-            }
-
-            CharSequence hintText = node.getHint();
-            String idName = node.getIdEntry();
-
-            if (parsed.usernameId == null) {
-                if (hintText != null && hintText.toString().toLowerCase(Locale.ROOT).contains("user")) {
+        String[] hints = node.getAutofillHints();
+        if (hints != null) {
+            for (String hint : hints) {
+                if (parsed.usernameId == null && (hint.toLowerCase(Locale.ROOT).contains("username") ||
+                        hint.toLowerCase(Locale.ROOT).contains("email"))) {
                     parsed.usernameId = autofillId;
-                } else if (idName != null && idName.toLowerCase(Locale.ROOT).contains("username")) {
-                    parsed.usernameId = autofillId;
-                }
-            }
-            if (parsed.passwordId == null) {
-                if (hintText != null && hintText.toString().toLowerCase(Locale.ROOT).contains("pass")) {
-                    parsed.passwordId = autofillId;
-                } else if (idName != null && idName.toLowerCase(Locale.ROOT).contains("password")) {
+                } else if (parsed.passwordId == null && hint.toLowerCase(Locale.ROOT).contains("password")) {
                     parsed.passwordId = autofillId;
                 }
             }
         }
 
-        int children = node.getChildCount();
-        for (int i = 0; i < children; i++) {
-            traverseStructureForFill(node.getChildAt(i), parsed, currentPackageName); // ✅ getChildAt()
+        CharSequence hintText = node.getHint();
+        String idName = node.getIdEntry();
+
+        if (parsed.usernameId == null && hintText != null &&
+                hintText.toString().toLowerCase(Locale.ROOT).contains("user")) {
+            parsed.usernameId = autofillId;
+        }
+
+        if (parsed.passwordId == null && hintText != null &&
+                hintText.toString().toLowerCase(Locale.ROOT).contains("pass")) {
+            int inputType = node.getInputType();
+            if (inputType == android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                    inputType == android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD ||
+                    inputType == (android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD) ||
+                    inputType == (android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) {
+                parsed.passwordId = autofillId;
+            }
+        }
+
+        int childCount = node.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            traverseStructureForFill(node.getChildAt(i), parsed, currentPackageName);
         }
     }
 
@@ -101,25 +96,17 @@ public class AutofillHelper {
         int nodes = structure.getWindowNodeCount();
         for (int i = 0; i < nodes; i++) {
             AssistStructure.WindowNode windowNode = structure.getWindowNodeAt(i);
-            AssistStructure.ViewNode root = windowNode.getRootViewNode();
-            ExtractedSaveData data = new ExtractedSaveData();
-            traverseStructureForSave(root, data);
-            if (data.username != null) username = data.username;
-            if (data.password != null) password = data.password;
-        }
-
-        if (username != null && password != null && siteIdentifier != null) {
-            return new Credential(siteIdentifier, username, password);
+            Credential credential = new Credential(siteIdentifier, username, password);
+            traverseStructureForSave(windowNode.getRootViewNode(), credential);
+            if (credential.getUsername() != null && credential.getPassword() != null) {
+                credential.setSiteName(siteIdentifier);
+                return credential;
+            }
         }
         return null;
     }
 
-    private static class ExtractedSaveData {
-        String username;
-        String password;
-    }
-
-    private static void traverseStructureForSave(AssistStructure.ViewNode node, ExtractedSaveData data) {
+    private static void traverseStructureForSave(AssistStructure.ViewNode node, Credential credential) {
         if (node == null) return;
 
         AutofillValue value = node.getAutofillValue();
@@ -130,38 +117,28 @@ public class AutofillHelper {
             if (hints != null) {
                 for (String hint : hints) {
                     String lowerHint = hint.toLowerCase(Locale.ROOT);
-                    if (data.username == null && (lowerHint.contains("username") || lowerHint.contains("email"))) {
-                        data.username = textValue;
-                        Log.d(TAG, "Save: Found username by hint: " + textValue);
-                    } else if (data.password == null && lowerHint.contains("password")) {
-                        data.password = textValue;
-                        Log.d(TAG, "Save: Found password by hint (value present)");
+                    if (credential.getUsername() == null && (lowerHint.contains("username") || lowerHint.contains("email"))) {
+                        credential.setUsername(textValue);
+                    } else if (credential.getPassword() == null && lowerHint.contains("password")) {
+                        credential.setPassword(textValue);
                     }
                 }
             }
 
-            if (data.username == null && node.getHint() != null &&
+            if (credential.getUsername() == null && node.getHint() != null &&
                     node.getHint().toString().toLowerCase(Locale.ROOT).contains("user")) {
-                data.username = textValue;
+                credential.setUsername(value.getTextValue().toString());
             }
 
-            if (data.password == null && node.getHint() != null &&
+            if (credential.getPassword() == null && node.getHint() != null &&
                     node.getHint().toString().toLowerCase(Locale.ROOT).contains("pass")) {
-                int inputType = node.getInputType(); // ✅ From ViewNode
-                if (inputType == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
-                        inputType == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD ||
-                        inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD) ||
-                        inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) {
-                    data.password = textValue;
-                } else {
-                    Log.w(TAG, "Possible password field detected, but input type is not password. Ignoring.");
-                }
+                credential.setPassword(value.getTextValue().toString());
             }
         }
 
         int childCount = node.getChildCount();
         for (int i = 0; i < childCount; i++) {
-            traverseStructureForSave(node.getChildAt(i), data); // ✅ getChildAt()
+            traverseStructureForSave(node.getChildAt(i), credential);
         }
     }
 }

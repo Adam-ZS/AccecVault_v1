@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class AddCredentialActivity extends AppCompatActivity {
     private EditText etSiteName, etUsername, etPassword;
-    private Button btnSaveCredential;
     private DBHelper dbHelper;
 
     @Override
@@ -20,33 +19,27 @@ public class AddCredentialActivity extends AppCompatActivity {
         etSiteName = findViewById(R.id.etSiteName);
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
-        btnSaveCredential = findViewById(R.id.btnSaveCredential);
+        Button btnSave = findViewById(R.id.btnSaveCredential);
+
         dbHelper = new DBHelper(this);
 
-        btnSaveCredential.setOnClickListener(v -> saveCredential());
-    }
+        btnSave.setOnClickListener(v -> {
+            String siteName = etSiteName.getText().toString().trim();
+            String username = etUsername.getText().toString().trim();
+            String password = etPassword.getText().toString();
 
-    private void saveCredential() {
-        String siteName = etSiteName.getText().toString().trim();
-        String username = etUsername.getText().toString().trim();
-        String password = etPassword.getText().toString();
+            if (siteName.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        if (siteName.isEmpty() || username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "All fields are required.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
             boolean success = dbHelper.addCredential(siteName, username, password);
             if (success) {
                 Toast.makeText(this, "Credential saved successfully!", Toast.LENGTH_SHORT).show();
-                finish();
+                finish(); // Go back to VaultActivity
             } else {
-                Toast.makeText(this, "Failed to save credential. Site may already exist.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Failed to save credential", Toast.LENGTH_LONG).show();
             }
-        } catch (Exception e) {
-            Toast.makeText(this, "Error saving credential: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
+        });
     }
 }

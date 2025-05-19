@@ -132,49 +132,58 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public List<Credential> getAllCredentials() {
-        List<Credential> credentialsList = new ArrayList<>();
+        List<Credential> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_CREDENTIALS, null);
+        Cursor cursor = db.query(TABLE_CREDENTIALS, null, null, null, null, null, null);
 
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 try {
                     long id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID));
                     String siteName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SITE_NAME));
-                    String storedEncryptedString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ENCRYPTED_DATA));
+                    String encryptedValue = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ENCRYPTED_DATA));
 
-                    String[] parts = storedEncryptedString.split(":", 2);
+                    // Split stored value into IV and ciphertext
+                    String[] parts = encryptedValue.split(":", 2);
                     if (parts.length != 2) {
-                        Log.e(TAG, "Invalid stored encrypted data format for site: " + siteName);
+                        Log.w(TAG, "Encrypted data invalid format. Expected 'iv:data'");
                         continue;
                     }
+
                     byte[] iv = Base64.decode(parts[0], Base64.DEFAULT);
                     byte[] encryptedData = Base64.decode(parts[1], Base64.DEFAULT);
 
                     Cipher cipher = getCipher(Cipher.DECRYPT_MODE, iv);
-                    byte[] decryptedDataBytes = cipher.doFinal(encryptedData);
-                    String decryptedCombinedData = new String(decryptedDataBytes, StandardCharsets.UTF_8);
+                    byte[] decryptedBytes = cipher.doFinal(encryptedData);
+                    String decryptedCombinedData = new String(decryptedBytes, StandardCharsets.UTF_8);
 
+                    // Split decrypted string into username and password
                     String[] userPassParts = decryptedCombinedData.split(":", 2);
-                    if (userPassParts.length == 2) {
-                        credentialsList.add(new Credential(id, siteName, userPassParts[0], userPassParts[1]));
-                    } else if (userPassParts.length == 1 && decryptedCombinedData.endsWith(":")) { // Password was empty
-                        credentialsList.add(new Credential(id, siteName, userPassParts[0], ""));
-                    } else if (userPassParts.length == 1 && decryptedCombinedData.startsWith(":")) { // Username was empty
-                        credentialsList.add(new Credential(id, siteName, "", userPassParts[0]));
-                    } else { // Only username, no colon, password might be empty (adjust logic as needed)
-                        credentialsList.add(new Credential(id, siteName, decryptedCombinedData, "")); // Assuming it's username only if no ':'
-                        Log.w(TAG, "Decrypted data for " + siteName + " did not split into user/pass as expected: " + decryptedCombinedData);
+                    String username = "";
+                    String password = "";
+
+                    if (userPassParts.length == 0) {
+                        Log.w(TAG, "Decrypted data empty for site: " + siteName);
+                    } else if (userPassParts.length == 1) {
+                        // Only one part found – assume it's just the username
+                        username = userPassParts[0];
+                        password = ""; // No password found
+                        Log.w(TAG, "Only username found in credential for: " + siteName);
+                    } else {
+                        username = userPassParts[0];
+                        password = userPassParts[1];
                     }
 
+                    list.add(new Credential(id, siteName, username, password));
                 } catch (Exception e) {
                     Log.e(TAG, "Error decrypting or reading credential", e);
                 }
             } while (cursor.moveToNext());
+            cursor.close();
         }
-        cursor.close();
+
         db.close();
-        return credentialsList;
+        return list;
     }
 
     public Credential getCredentialBySiteName(String siteName) {
